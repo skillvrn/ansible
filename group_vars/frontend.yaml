@@ -1,0 +1,4 @@
+---
+frontend_user: www-data
+frontend_version: 1.0.485933
+frontend_path: /var/www-data/dist
