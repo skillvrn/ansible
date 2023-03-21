@@ -1,0 +1,20 @@
+[Unit]
+Description=Backend for Sausage-store version {{ backend_version }}
+After=syslog.target network.target
+Documentation=https://gitlab.praktikum-services.ru/std-014-40/sausage-store
+
+[Service]
+User={{ backend_user }}
+Environment=REPORT_PATH={{ backend_path }}/log
+Environment=LOG_PATH={{ backend_path }}/log
+PIDFile={{ backend_path }}/sausage-store.pid
+StandardOutput=file:{{ backend_path }}/log/backend.log
+StandardError=append:{{ backend_path }}/log/errors.log
+Restart=always
+ExecStart=/usr/bin/java -jar {{ backend_path }}/sausage-store.jar
+ExecStop=/usr/bin/kill -15 $MAINPID
+ExecReload=/usr/bin/kill -HUP $MAINPID
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
