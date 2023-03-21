@@ -1,0 +1,14 @@
+[Unit]
+Description=Frontend for Sausage-Store version {{ frontend_version }}
+After=syslog.target network.target
+Documentation=https://gitlab.praktikum-services.ru/std-014-40/sausage-store
+
+[Service]
+User={{ frontend_user }}
+StandardOutput=file:{{ frontend_path }}/out-front.log
+StandardError=file:{{ frontend_path }}/out-front.log
+ExecStart=/usr/bin/http-server {{ frontend_path }}/frontend -p 8080 --proxy http://10.128.0.76:8080
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
