@@ -1,0 +1,71 @@
+---
+
+- name: Update linux repo tree
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Install Java for application
+  become: true
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - python
+      - python3-pip
+      - python3
+      - openjdk-16-jdk
+
+- name: Install the lxml package
+  pip:
+    name: lxml
+    state: latest
+
+- name: Add user for service
+  user:
+    name: "{{ backend_user }}"
+    create_home: no
+    shell: /sbin/nologin
+
+- name: Create working directory
+  file:
+    path: "{{ backend_path }}/log"
+    state: directory
+
+- name: Download artifact from Nexus repository
+  maven_artifact:
+    dest: "{{ backend_path }}"
+    repository_url: "{{ nexus_backend_url }}"
+    group_id: "{{ nexus_group_id }}"
+    artifact_id: "sausage-store"
+    version: "{{ backend_version }}"
+    username: "{{ nexus_user }}"
+    password: "{{ nexus_password }}"
+
+- name: Set owner and chmode for jar-file
+  file:
+    path: "{{ backend_path }}/sausage-store.jar"
+    owner: "{{ backend_user }}"
+    group: "{{ backend_user }}"
+    mode: "0664"
+
+- name: Write version of artifact in working directory
+  copy:
+    dest: "{{ backend_path }}/version.txt"
+    content: |
+      {{ backend_version }}
+
+- name: Set owner and chmode for version-file
+  file:
+    path: "{{ backend_path }}/version.txt"
+    owner: "{{ backend_user }}"
+    group: "{{ backend_user }}"
+    mode: "0664"
+
+- name: Upload unit-file for systemd
+  template:
+    src: sausage-store-backend.service.j2
+    dest: /etc/systemd/system/sausage-store-backend.service
+  notify:
+    - Reload systemd
+    - Restart backend
